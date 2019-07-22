@@ -23,7 +23,9 @@
 //! [avro-rs]: https://crates.io/crates/avro-rs
 
 pub mod schema_registry;
+mod value_fixed_fix;
 
+use crate::value_fixed_fix::FixedFixer;
 use avro_rs::schema::Name;
 use avro_rs::to_value;
 use avro_rs::types::{Record, ToAvro, Value};
@@ -155,10 +157,9 @@ impl Decoder {
         match schema {
             Ok(v) => match from_avro_datum(&v, &mut reader, None) {
                 Ok(v) => Ok(v),
-                Err(e) => Err(SRCError::new(
+                Err(e) => Err(SRCError::non_retryable_from_err(
+                    e,
                     "Could not transform bytes using schema",
-                    Some(&e.to_string()),
-                    false,
                 )),
             },
             Err(e) => Err(e.clone()),
@@ -410,11 +411,10 @@ fn to_payload<T: ToAvro>(schema: &Schema, id: u32, record: T) -> Result<Vec<u8>,
     match to_avro_datum(schema, record) {
         Ok(v) => payload.extend_from_slice(v.as_slice()),
         Err(e) => {
-            return Err(SRCError::new(
+            return Err(SRCError::non_retryable_from_err(
+                e,
                 "Could not get avro bytes",
-                Some(&e.to_string()),
-                false,
-            ));
+            ))
         }
     }
     Ok(payload)
@@ -434,7 +434,7 @@ fn to_bytes(
                 "Could not create record from schema",
                 None,
                 false,
-            ));
+            ))
         }
     };
     for value in values {
@@ -446,15 +446,14 @@ fn to_bytes(
 /// Using the schema with an item implementing serialize the item will be correctly deserialized
 /// according to the avro specification.
 fn item_to_bytes(schema: &Schema, id: u32, item: impl Serialize) -> Result<Vec<u8>, SRCError> {
-    let record = match to_value(item) {
-        Ok(v) => v,
-        Err(e) => {
-            return Err(SRCError::new(
-                "Could not get avro record from struct",
-                Some(&e.to_string()),
-                false,
-            ));
-        }
+    let record = match to_value(item)
+        .map_err(|e| SRCError::non_retryable_from_err(e, "Could not transform to avro_rs value"))
+        .and_then(|r| r.fix_fixed(schema))
+        .map(|r| r.resolve(schema))
+    {
+        Ok(Ok(v)) => v,
+        Ok(Err(e)) => return Err(SRCError::non_retryable_from_err(e, "Failed to resolve")),
+        Err(e) => return Err(e),
     };
     to_payload(schema, id, record)
 }
@@ -674,7 +673,7 @@ mod tests {
 
         assert_eq!(
             heartbeat,
-            Err(SRCError::new("Invalid json string", Some("JSON error"), false).into_cache())
+            Err(SRCError::new("Invalid json string", Some("expected `:` at line 1 column 130"), false).into_cache())
         )
     }
 
@@ -691,7 +690,7 @@ mod tests {
 
         assert_eq!(
             heartbeat,
-            Err(SRCError::new("Invalid json string", Some("JSON error"), false).into_cache())
+            Err(SRCError::new("Invalid json string", Some("expected `:` at line 1 column 130"), false).into_cache())
         )
     }
 
@@ -1090,8 +1089,8 @@ mod tests {
         assert_eq!(
             result,
             Err(SRCError::new(
-                "Could not get avro bytes",
-                Some("Decoding error: value does not match schema"),
+                "error fixing record",
+                Some("missing field name in record"),
                 false,
             ))
         )
@@ -1106,7 +1105,7 @@ mod tests {
         assert_eq!(
             result,
             Err(SRCError::new(
-                "Could not get avro record from struct",
+                "Could not transform to avro_rs value",
                 Some("map key is not a string"),
                 false,
             ))
