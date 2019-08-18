@@ -343,6 +343,8 @@ impl fmt::Display for SRCError {
     }
 }
 
+impl std::error::Error for SRCError{}
+
 /// Specific error from which can be determined whether retrying might not lead to an error and
 /// whether the error is cashed, it's turned into the cashed variant when it's put into the cache.
 impl SRCError {
