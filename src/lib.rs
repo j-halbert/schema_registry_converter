@@ -223,13 +223,13 @@ impl Decoder {
 ///  # use schema_registry_converter::schema_registry::SubjectNameStrategy;
 ///  # use avro_rs::types::Value;
 ///
-/// let _m = mock("GET", "/subjects/heartbeat-value/versions/latest")
+/// let _m = mock("GET", "/subjects/heartbeat-value/versions/latest/")
 ///     .with_status(200)
 ///     .with_header("content-type", "application/vnd.schemaregistry.v1+json")
 ///     .with_body(r#"{"subject":"heartbeat-value","version":1,"id":3,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
 ///     .create();
 ///
-/// let _m = mock("GET", "/subjects/heartbeat-key/versions/latest")
+/// let _m = mock("GET", "/subjects/heartbeat-key/versions/latest/")
 ///     .with_status(200)
 ///     .with_header("content-type", "application/vnd.schemaregistry.v1+json")
 ///     .with_body(r#"{"subject":"heartbeat-value","version":1,"id":4,"schema":"{\"type\":\"record\",\"name\":\"Name\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"name\",\"type\":\"string\",\"avro.java.string\":\"String\"}]}"}"#)
@@ -282,7 +282,7 @@ impl Encoder {
     /// let mut encoder = Encoder::new(server_url().to_string());
     /// let strategy = SubjectNameStrategy::RecordNameStrategy("nl.openweb.data.Heartbeat".into());
     ///
-    /// let _m = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest")
+    /// let _m = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest/")
     ///     .with_status(404)
     ///     .with_header("content-type", "application/vnd.schemaregistry.v1+json")
     ///     .with_body(r#"{"error_code":40403,"message":"Schema not found"}"#)
@@ -291,7 +291,7 @@ impl Encoder {
     /// let bytes = encoder.encode(vec!(("beat", Value::Long(3))), &strategy);
     /// assert_eq!(bytes, Err(SRCError::new("Did not get a 200 response code but 404 instead", None, false).into_cache()));
     ///
-    /// let _m = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest")
+    /// let _m = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest/")
     ///     .with_status(200)
     ///     .with_header("content-type", "application/vnd.schemaregistry.v1+json")
     ///     .with_body(r#"{"subject":"heartbeat-value","version":1,"id":4,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
@@ -320,7 +320,7 @@ impl Encoder {
     ///  # use schema_registry_converter::schema_registry::SubjectNameStrategy;
     ///  # use avro_rs::types::Value;
     ///
-    /// let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest")
+    /// let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest/")
     ///     .with_status(200)
     ///     .with_header("content-type", "application/vnd.schemaregistry.v1+json")
     ///     .with_body(r#"{"subject":"heartbeat-value","version":1,"id":3,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
@@ -357,7 +357,7 @@ impl Encoder {
     ///  # use serde::Serialize;
     ///  # use avro_rs::types::Value;
     ///
-    /// let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest")
+    /// let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest/")
     ///     .with_status(200)
     ///     .with_header("content-type", "application/vnd.schemaregistry.v1+json")
     ///     .with_body(r#"{"subject":"heartbeat-value","version":1,"id":3,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
@@ -807,13 +807,13 @@ mod tests {
 
     #[test]
     fn test_encode_key_and_value() {
-        let _m = mock("GET", "/subjects/heartbeat-value/versions/latest")
+        let _m = mock("GET", "/subjects/heartbeat-value/versions/latest/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"subject":"heartbeat-value","version":1,"id":3,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
             .create();
 
-        let _n = mock("GET", "/subjects/heartbeat-key/versions/latest")
+        let _n = mock("GET", "/subjects/heartbeat-key/versions/latest/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"subject":"heartbeat-value","version":1,"id":4,"schema":"{\"type\":\"record\",\"name\":\"Name\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"name\",\"type\":\"string\",\"avro.java.string\":\"String\"}]}"}"#)
@@ -842,7 +842,7 @@ mod tests {
 
     #[test]
     fn test_using_record_name() {
-        let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest")
+        let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"subject":"heartbeat-value","version":1,"id":3,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
@@ -860,7 +860,7 @@ mod tests {
 
     #[test]
     fn test_encoder_no_id_in_response() {
-        let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest")
+        let _m = mock("GET", "/subjects/heartbeat-nl.openweb.data.Heartbeat/versions/latest/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"subject":"heartbeat-value","version":1,"no-id":3,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
@@ -901,7 +901,7 @@ mod tests {
 
     #[test]
     fn test_encoder_schema_registry_unavailable_with_record() {
-        let mut encoder = Encoder::new("bogus".into());
+        let mut encoder = Encoder::new("http://bogus".into());
         let heartbeat_schema = SuppliedSchema::new(r#"{"type":"record","name":"Balance","namespace":"nl.openweb.data","fields":[{"name":"beat","type":"long"}]}"#.into());
         let strategy =
             SubjectNameStrategy::RecordNameStrategyWithSchema(Box::from(heartbeat_schema));
@@ -923,7 +923,7 @@ mod tests {
         let mut encoder = Encoder::new(server_url().to_string());
         let strategy = SubjectNameStrategy::RecordNameStrategy("nl.openweb.data.Heartbeat".into());
 
-        let _m = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest")
+        let _m = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest/")
             .with_status(404)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"error_code":40403,"message":"Schema not found"}"#)
@@ -940,7 +940,7 @@ mod tests {
             .into_cache())
         );
 
-        let _n = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest")
+        let _n = mock("GET", "/subjects/nl.openweb.data.Heartbeat/versions/latest/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"subject":"heartbeat-value","version":1,"id":4,"schema":"{\"type\":\"record\",\"name\":\"Heartbeat\",\"namespace\":\"nl.openweb.data\",\"fields\":[{\"name\":\"beat\",\"type\":\"long\"}]}"}"#)
@@ -965,13 +965,13 @@ mod tests {
 
     #[test]
     fn test_encode_key_and_value_supplied_record() {
-        let _n = mock("POST", "/subjects/heartbeat-key/versions")
+        let _n = mock("POST", "/subjects/heartbeat-key/versions/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"id":3}"#)
             .create();
 
-        let _m = mock("POST", "/subjects/heartbeat-value/versions")
+        let _m = mock("POST", "/subjects/heartbeat-value/versions/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"id":4}"#)
@@ -1007,7 +1007,7 @@ mod tests {
 
     #[test]
     fn test_encode_record_name_strategy_supplied_record() {
-        let _n = mock("POST", "/subjects/nl.openweb.data.Heartbeat/versions")
+        let _n = mock("POST", "/subjects/nl.openweb.data.Heartbeat/versions/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"id":11}"#)
@@ -1024,7 +1024,7 @@ mod tests {
 
     #[test]
     fn test_encode_record_name_strategy_supplied_record_wrong_response() {
-        let _n = mock("POST", "/subjects/nl.openweb.data.Heartbeat/versions")
+        let _n = mock("POST", "/subjects/nl.openweb.data.Heartbeat/versions/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"no-id":11}"#)
@@ -1044,7 +1044,7 @@ mod tests {
 
     #[test]
     fn test_encode_topic_record_name_strategy_supplied_record() {
-        let _n = mock("POST", "/subjects/hb-nl.openweb.data.Heartbeat/versions")
+        let _n = mock("POST", "/subjects/hb-nl.openweb.data.Heartbeat/versions/")
             .with_status(200)
             .with_header("content-type", "application/vnd.schemaregistry.v1+json")
             .with_body(r#"{"id":23}"#)

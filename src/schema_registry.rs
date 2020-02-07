@@ -42,18 +42,18 @@ impl SuppliedSchema {
 /// qualified name (only for RecordNameStrategy), or the schema needs to be provided.
 ///
 /// ```
-/// # use mockito::{mock, server_address};
+/// # use mockito::{mock, server_url};
 /// # use schema_registry_converter::Encoder;
 /// # use schema_registry_converter::schema_registry::{SRCError, SubjectNameStrategy, SuppliedSchema};
 /// # use avro_rs::types::Value;
 ///
-/// # let _n = mock("POST", "/subjects/hb-nl.openweb.data.Heartbeat/versions")
+/// # let _n = mock("POST", "/subjects/hb-nl.openweb.data.Heartbeat/versions/")
 /// #    .with_status(200)
 /// #    .with_header("content-type", "application/vnd.schemaregistry.v1+json")
 /// #    .with_body(r#"{"id":23}"#)
 /// #    .create();
 ///
-/// let mut encoder = Encoder::new(server_address().to_string());
+/// let mut encoder = Encoder::new(server_url().to_string());
 ///
 /// let heartbeat_schema = SuppliedSchema::new(r#"{"type":"record","name":"Heartbeat","namespace":"nl.openweb.data","fields":[{"name":"beat","type":"long"}]}"#.into());
 /// let strategy = SubjectNameStrategy::TopicRecordNameStrategyWithSchema("hb".into(), Box::from(heartbeat_schema));
@@ -70,6 +70,34 @@ pub enum SubjectNameStrategy {
     TopicRecordNameStrategyWithSchema(String, Box<SuppliedSchema>),
 }
 
+/// Gets the proper url based on path segments
+pub fn get_url(schema_registry_url: &str, path_segments: &Vec<&str>) -> Result<Url, SRCError> {
+    let mut url = schema_registry_url.to_owned();
+    if !url.contains("http://") ||!url.contains("https://") {
+        // Assume http if no protocol specified
+        url = format!("http://{}", url);
+    }
+
+    let url = Url::parse(url.as_str())
+        .map_err(|e| SRCError {
+            error: "Error constructing schema registry url".into(),
+            side: Some(format!("{}", e)),
+            retriable: false,
+            cached: false,
+        })?;
+
+    let url = path_segments.iter().fold(Ok(url), |url, segment| url?.join(segment)
+        .map_err(|e| SRCError {
+            error: "Error constructing schema registry url".into(),
+            side: Some(format!("{}", e)),
+            retriable: false,
+            cached: false,
+        })
+    )?;
+
+    Ok(url)
+}
+
 /// Gets a schema by an id. This is used to get the correct schema te deserialize bytes, when the
 /// id is encoded in the bytes.
 pub fn get_schema_by_id(id: u32, schema_registry_url: &str) -> Result<Schema, SRCError> {
@@ -80,7 +108,7 @@ pub fn get_schema_by_id(id: u32, schema_registry_url: &str) -> Result<Schema, SR
             retriable: false,
             cached: false,
         })?
-        .join("/schemas/ids/")
+        .join("schemas/ids/")
         .map_err(|e| SRCError {
             error: "Error constructing schema registry url".into(),
             side: Some(format!("{}", e)),
@@ -106,21 +134,51 @@ pub fn get_schema_by_subject(
     subject_name_strategy: &SubjectNameStrategy,
 ) -> Result<(Schema, u32), SRCError> {
     let schema = get_schema(subject_name_strategy);
+    let url = Url::parse(schema_registry_url)
+        .map_err(|e| SRCError {
+            error: "Error constructing schema registry url".into(),
+            side: Some(format!("{}", e)),
+            retriable: false,
+            cached: false,
+        })?
+        .join("subjects/")
+        .map_err(|e| SRCError {
+            error: "Error constructing schema registry url".into(),
+            side: Some(format!("{}", e)),
+            retriable: false,
+            cached: false,
+        })?
+        .join(&(get_subject(subject_name_strategy) + "/"))
+        .map_err(|e| SRCError {
+            error: "Error constructing schema registry url".into(),
+            side: Some(format!("{}", e)),
+            retriable: false,
+            cached: false,
+        })?
+        .join("versions/")
+        .map_err(|e| SRCError {
+            error: "Error constructing schema registry url".into(),
+            side: Some(format!("{}", e)),
+            retriable: false,
+            cached: false,
+        })?;
+
     match schema {
         None => {
-            let url = format!(
-                "{}/subjects/{}/versions/latest",
-                schema_registry_url,
-                get_subject(subject_name_strategy)
-            );
+            let url = url
+                .join("latest/")
+                .map_err(|e| SRCError {
+                    error: "Error constructing schema registry url".into(),
+                    side: Some(format!("{}", e)),
+                    retriable: false,
+                    cached: false,
+                })?
+                .into_string();
+                
             schema_from_url(&url, None)
         }
         Some(v) => {
-            let url = format!(
-                "{}/subjects/{}/versions",
-                schema_registry_url,
-                get_subject(subject_name_strategy)
-            );
+            let url = url.into_string();
             post_schema(&url, v)
         }
     }
