@@ -488,7 +488,7 @@ fn to_bytes_no_transfer_wrong() {
         result,
         Err(SRCError::new(
             "Could not get avro bytes",
-            Some("Validation error: value does not match schema"),
+            Some("Decoding error: value does not match schema"),
             false,
         ))
     )
