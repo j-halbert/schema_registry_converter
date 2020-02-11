@@ -95,7 +95,6 @@ pub fn get_schema_by_id(id: u32, schema_registry_url: &str) -> Result<Schema, SR
             cached: false,
         })?
         .into_string();
-
     schema_from_url(&url, Option::from(id)).and_then(|t| Ok(t.0))
 }
 
@@ -311,7 +310,7 @@ fn to_json(mut easy: Easy2<Collector>) -> Result<JsonValue, SRCError> {
         Ok(v) => Ok(v),
         Err(e) => Err(SRCError::new(
             "Invalid json string",
-            Some(e.description()),
+            Some(e.to_string().as_ref()),
             false,
         )),
     }
