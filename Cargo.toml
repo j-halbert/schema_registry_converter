@@ -17,7 +17,7 @@ default = []
 kafka_test = []
 
 [dependencies.avro-rs]
-version = ">= 0.6"
+version = ">= 0.7"
 
 [dependencies.byteorder]
 version = ">= 1.0"
