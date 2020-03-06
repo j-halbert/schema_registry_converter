@@ -17,7 +17,8 @@ default = []
 kafka_test = []
 
 [dependencies.avro-rs]
-version = ">= 0.7"
+git = "https://github.com/j-halbert/avro-rs"
+branch = "union_multiple_named_types_support"
 
 [dependencies.byteorder]
 version = ">= 1.0"
