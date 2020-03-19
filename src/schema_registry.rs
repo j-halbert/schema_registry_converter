@@ -107,19 +107,43 @@ pub fn get_schema_by_subject(
     let schema = get_schema(subject_name_strategy);
     match schema {
         None => {
-            let url = format!(
-                "{}/subjects/{}/versions/latest",
-                schema_registry_url,
-                get_subject(subject_name_strategy)
-            );
+            let subject_name = format!("/subjects/{}/versions/latest", get_subject(subject_name_strategy));
+            let url = Url::parse(schema_registry_url)
+                .map_err(|e| SRCError {
+                    error: "Error constructing schema registry url".into(),
+                    side: Some(format!("{}", e)),
+                    retriable: false,
+                    cached: false,
+                })?
+                .join(subject_name.as_str())
+                .map_err(|e| SRCError {
+                    error: "Error constructing schema registry url".into(),
+                    side: Some(format!("{}", e)),
+                    retriable: false,
+                    cached: false,
+                })?
+                .into_string();
+
             schema_from_url(&url, None)
         }
         Some(v) => {
-            let url = format!(
-                "{}/subjects/{}/versions",
-                schema_registry_url,
-                get_subject(subject_name_strategy)
-            );
+            let subject_name = format!("/subjects/{}/versions", get_subject(subject_name_strategy));
+            let url = Url::parse(schema_registry_url)
+                .map_err(|e| SRCError {
+                    error: "Error constructing schema registry url".into(),
+                    side: Some(format!("{}", e)),
+                    retriable: false,
+                    cached: false,
+                })?
+                .join(subject_name.as_str())
+                .map_err(|e| SRCError {
+                    error: "Error constructing schema registry url".into(),
+                    side: Some(format!("{}", e)),
+                    retriable: false,
+                    cached: false,
+                })?
+                .into_string();
+
             post_schema(&url, v)
         }
     }
