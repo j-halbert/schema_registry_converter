@@ -404,7 +404,7 @@ impl Encoder {
     }
 }
 
-fn to_payload<T: ToAvro + Into<Value>>(schema: &Schema, id: u32, record: T) -> Result<Vec<u8>, SRCError> {
+fn to_payload<T: ToAvro>(schema: &Schema, id: u32, record: T) -> Result<Vec<u8>, SRCError> {
     let mut payload = vec![0u8];
     let mut buf = [0u8; 4];
     BigEndian::write_u32(&mut buf, id);
